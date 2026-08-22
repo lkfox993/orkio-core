@@ -1,0 +1,88 @@
+# A Docker Compose must always start with the version tag.
+# We use '3' because it's the last version.
+version: "3"
+
+services:
+
+  ork-postgres:
+    # Official Postgres image from DockerHub (we use the last version)
+    image: "postgres:latest"
+    container_name: ork-postgres
+    ports:
+      - 5439:5432
+    environment:
+      POSTGRES_USER: orkio # The PostgreSQL user (useful to connect to the database)
+      POSTGRES_PASSWORD: password # The PostgreSQL password (useful to connect to the database)
+      POSTGRES_DB: orkio # The PostgreSQL default database (automatically created at first launch)
+
+  ork-pulsar:
+    image: apachepulsar/pulsar:3.3.0
+    command: bin/pulsar standalone
+    ports:
+      # Binary protocol port for client connections
+      - "6650:6650"
+      # HTTP port for admin API and REST endpoints
+      - "8080:8080"
+    # volumes:
+    #   # Persist topic data and metadata
+    #   - pulsar_data:/pulsar/data
+    #   # Persist configuration
+    #   - pulsar_conf:/pulsar/conf
+    # environment:
+    #   # Set JVM memory limits to prevent container OOM
+    #   PULSAR_MEM: "-Xms256m -Xmx512m"
+    healthcheck:
+      test: ["CMD", "bin/pulsar-admin", "brokers", "healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  ork-pulsar-ui:
+    image: apachepulsar/pulsar-manager:v0.2.0
+    ports:
+      # Web UI port
+      - "9527:9527"
+      # Backend API port
+      - "7750:7750"
+    environment:
+      SPRING_CONFIGURATION_FILE: /pulsar-manager/pulsar-manager/application.properties
+    depends_on:
+      ork-pulsar:
+        condition: service_healthy
+
+  ork-tikv-pd:
+    image: pingcap/pd:latest
+    container_name: ork-tikv-pd
+    ports:
+      - "2379:2379"
+      - "2380:2380"
+    command:
+      - --name=pd
+      - --data-dir=/data/pd
+      - --client-urls=http://0.0.0.0:2379
+      - --advertise-client-urls=http://localhost:2379,http://ork-tikv-pd:2379
+      - --peer-urls=http://0.0.0.0:2380
+      - --advertise-peer-urls=http://ork-tikv-pd:2380
+      - --initial-cluster=pd=http://ork-tikv-pd:2380
+      
+  ork-tikv:
+    image: pingcap/tikv:latest
+    container_name: ork-tikv
+    depends_on:
+      - ork-tikv-pd
+    ports:
+      - "20160:20160"
+    command:
+      - --addr=0.0.0.0:20160
+      - --status-addr=0.0.0.0:20180
+      - --advertise-addr=ork-tikv:20160
+      - --pd-endpoints=ork-tikv-pd:2379
+      - --data-dir=/data/tikv
+      - --log-file=
+
+volumes:
+  pulsar_data:
+
+  
