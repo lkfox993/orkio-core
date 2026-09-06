@@ -2,9 +2,8 @@ package main
 
 import (
 	"log"
-	// "os"
 
-	// "github.com/lkfox993/orkio-core/internal/storage/postgres"
+	"github.com/lkfox993/orkio-core/internal/storage/postgres"
 	"github.com/lkfox993/orkio-core/internal/storage/tikv"
 
 	httpserver "github.com/lkfox993/orkio-core/internal/transport/http"
@@ -12,11 +11,11 @@ import (
 
 func main() {
 
-	// _, err := postgres.New(os.Getenv("DATABASE_URL"))
+	_, err := postgres.New( /*os.Getenv("DATABASE_URL")*/ "postgres://orkio:password@localhost:5439/orkio")
 
-	// if err != nil {
-	// 	panic(err)
-	// }
+	if err != nil {
+		panic(err)
+	}
 
 	store, err := tikv.New(tikv.Config{
 		Endpoints: []string{
