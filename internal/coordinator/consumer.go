@@ -6,15 +6,18 @@ import (
 	"fmt"
 
 	"github.com/lkfox993/orkio-core/internal/events"
+	"github.com/lkfox993/orkio-core/internal/messaging"
 )
 
 type Consumer struct {
-	engine *Engine
+	engine   *Engine
+	consumer messaging.Consumer
 }
 
-func NewConsumer(engine *Engine) *Consumer {
+func NewConsumer(engine *Engine, consumer messaging.Consumer) *Consumer {
 	return &Consumer{
-		engine: engine,
+		engine:   engine,
+		consumer: consumer,
 	}
 }
 
@@ -63,4 +66,8 @@ func (c *Consumer) HandleMessage(ctx context.Context, data []byte) error {
 	default:
 		return fmt.Errorf("unknown event type: %q", event.Type)
 	}
+}
+
+func (c *Consumer) Run(ctx context.Context) error {
+	return c.consumer.Consume(ctx, c.HandleMessage)
 }

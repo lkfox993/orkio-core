@@ -13,3 +13,7 @@ func NewPublisher(publisher Pulsar.Producer) *Publisher {
 		publisher: publisher,
 	}
 }
+
+func (p *Publisher) Publish() error {
+	return nil
+}

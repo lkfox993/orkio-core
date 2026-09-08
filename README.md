@@ -20,3 +20,7 @@ Define your workflow. Deploy it. Run it. Let Orkio handle state, retries, execut
 | 🧩 | **Language-Agnostic** | Build workers using the language and stack you prefer. |
 | 🔢 | **Versioned Workflows** | Deploy new versions without disrupting running instances. |
 | 🛠️ | **Developer-First** | Control and integrate Orkio through CLI, API, and SDKs. |
+
+## Contributing
+
+See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the repository and the development workflow.
