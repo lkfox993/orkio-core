@@ -3,5 +3,5 @@ package messaging
 import "context"
 
 type Publisher interface {
-	Publish(ctx context.Context, topic string, data []byte) error
+	Publish(ctx context.Context, data []byte, topic string) error
 }

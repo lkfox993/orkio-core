@@ -18,5 +18,21 @@ func NewConsumer(consumer *Kafka.Reader) *Consumer {
 }
 
 func (c *Consumer) Consume(ctx context.Context, handler messaging.Handler) error {
-	return nil
+
+	for {
+		msg, err := c.consumer.FetchMessage(ctx)
+
+		if err != nil {
+			return err
+		}
+
+		if err := handler(ctx, msg.Value); err != nil {
+			continue
+		}
+
+		if err := c.consumer.CommitMessages(ctx, msg); err != nil {
+			return err
+		}
+	}
+
 }

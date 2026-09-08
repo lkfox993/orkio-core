@@ -1,6 +1,8 @@
 package pulsar
 
 import (
+	"context"
+
 	Pulsar "github.com/apache/pulsar-client-go/pulsar"
 )
 
@@ -14,6 +16,13 @@ func NewPublisher(publisher Pulsar.Producer) *Publisher {
 	}
 }
 
-func (p *Publisher) Publish() error {
-	return nil
+func (p *Publisher) Publish(ctx context.Context, data []byte, topic string) error {
+
+	msg := Pulsar.ProducerMessage{
+		Payload: data,
+	}
+
+	_, err := p.publisher.Send(ctx, &msg)
+
+	return err
 }

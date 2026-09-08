@@ -1,6 +1,8 @@
 package kafka
 
 import (
+	"context"
+
 	Kafka "github.com/segmentio/kafka-go"
 )
 
@@ -14,6 +16,8 @@ func NewPublisher(publisher *Kafka.Writer) *Publisher {
 	}
 }
 
-func (p *Publisher) Publish() error {
-	return nil
+func (p *Publisher) Publish(ctx context.Context, data []byte, topic string) error {
+
+	msg := Kafka.Message{Topic: topic, Value: data}
+	return p.publisher.WriteMessages(ctx, msg)
 }
