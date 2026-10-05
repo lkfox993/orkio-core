@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/lkfox993/orkio-core/internal/jobs"
+	"github.com/lkfox993/orkio-core/internal/job"
 	"github.com/tikv/client-go/v2/txnkv"
 )
 
@@ -19,7 +19,7 @@ func NewJobRepository(db *txnkv.Client) *JobRepository {
 	}
 }
 
-func (r *JobRepository) Get(ctx context.Context, id string) (*jobs.Job, error) {
+func (r *JobRepository) Get(ctx context.Context, id string) (*job.Job, error) {
 
 	key := jobKey(id)
 
@@ -32,11 +32,12 @@ func (r *JobRepository) Get(ctx context.Context, id string) (*jobs.Job, error) {
 	defer txn.Rollback()
 
 	value, err := txn.Get(ctx, []byte(key))
+
 	if err != nil {
 		return nil, fmt.Errorf("get job %q: %w", id, err)
 	}
 
-	var job jobs.Job
+	var job job.Job
 
 	if err := json.Unmarshal(value, &job); err != nil {
 		return nil, fmt.Errorf("unmarshal job %q: %w", id, err)
@@ -45,18 +46,21 @@ func (r *JobRepository) Get(ctx context.Context, id string) (*jobs.Job, error) {
 	return &job, nil
 }
 
-func (r *JobRepository) Create(ctx context.Context, job *jobs.Job) error {
+func (r *JobRepository) Create(ctx context.Context, job *job.Job) error {
 	key := jobKey(job.ID)
 
 	value, err := json.Marshal(job)
+
 	if err != nil {
 		return fmt.Errorf("marshal job %q: %w", job.ID, err)
 	}
 
 	txn, err := r.db.Begin()
+
 	if err != nil {
 		return err
 	}
+
 	defer txn.Rollback()
 
 	// Не перезаписываем существующий Job.
@@ -80,7 +84,7 @@ func (r *JobRepository) Create(ctx context.Context, job *jobs.Job) error {
 	return nil
 }
 
-func (r *JobRepository) Update(ctx context.Context, job *jobs.Job) error {
+func (r *JobRepository) Update(ctx context.Context, job *job.Job) error {
 	key := jobKey(job.ID)
 
 	value, err := json.Marshal(job)
@@ -89,9 +93,11 @@ func (r *JobRepository) Update(ctx context.Context, job *jobs.Job) error {
 	}
 
 	txn, err := r.db.Begin()
+
 	if err != nil {
 		return err
 	}
+
 	defer txn.Rollback()
 
 	if err := txn.Set([]byte(key), value); err != nil {
@@ -106,14 +112,14 @@ func (r *JobRepository) Update(ctx context.Context, job *jobs.Job) error {
 }
 
 func (r *JobRepository) Complete(ctx context.Context, id string) error {
-	job, err := r.Get(ctx, id)
+	j, err := r.Get(ctx, id)
 	if err != nil {
 		return err
 	}
 
-	job.Status = jobs.StatusCompleted
+	j.Status = job.StatusCompleted
 
-	return r.Update(ctx, job)
+	return r.Update(ctx, j)
 }
 
 func (r *JobRepository) Fail(
@@ -121,15 +127,15 @@ func (r *JobRepository) Fail(
 	id string,
 	reason string,
 ) error {
-	job, err := r.Get(ctx, id)
+	j, err := r.Get(ctx, id)
 	if err != nil {
 		return err
 	}
 
-	job.Status = jobs.StatusFailed
-	job.Error = reason
+	j.Status = job.StatusFailed
+	j.Error = reason
 
-	return r.Update(ctx, job)
+	return r.Update(ctx, j)
 }
 
 func jobKey(id string) string {

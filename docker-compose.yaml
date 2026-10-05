@@ -22,7 +22,7 @@ services:
       # Binary protocol port for client connections
       - "6650:6650"
       # HTTP port for admin API and REST endpoints
-      - "8080:8080"
+      - "8089:8080"
     # volumes:
     #   # Persist topic data and metadata
     #   - pulsar_data:/pulsar/data

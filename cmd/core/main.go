@@ -1,37 +1,54 @@
 package main
 
 import (
-	"log"
+	"fmt"
+	// "log"
+	"os"
 
-	"github.com/lkfox993/orkio-core/internal/storage/postgres"
-	"github.com/lkfox993/orkio-core/internal/storage/tikv"
-
-	httpserver "github.com/lkfox993/orkio-core/internal/transport/http"
+	// "github.com/lkfox993/orkio-core/internal/api"
+	// "github.com/lkfox993/orkio-core/internal/storage/postgres"
+	// "github.com/lkfox993/orkio-core/internal/storage/tikv"
+	// "github.com/lkfox993/orkio-core/internal/transports"
+	"github.com/lkfox993/orkio-core/internal/workflow"
 )
 
 func main() {
 
-	_, err := postgres.New( /*os.Getenv("DATABASE_URL")*/ "postgres://orkio:password@localhost:5439/orkio")
+	file, err := os.ReadFile("example/workflow.hcl")
+
+	definition, err := workflow.ParseDefinition(file)
 
 	if err != nil {
 		panic(err)
 	}
 
-	store, err := tikv.New(tikv.Config{
-		Endpoints: []string{
-			"http://localhost:2379",
-		},
-	})
+	fmt.Println(333888, definition.Key)
+	fmt.Println(definition.Nodes)
 
-	if err != nil {
-		panic(err)
-	}
+	// db, err := postgres.New( /*os.Getenv("DATABASE_URL")*/ "postgres://orkio:password@localhost:5439/orkio")
 
-	server := httpserver.NewServer()
+	// if err != nil {
+	// 	panic(err)
+	// }
 
-	if err := server.Start(":8080"); err != nil {
-		log.Fatal(err)
-	}
+	// store, err := tikv.New(tikv.Config{
+	// 	Endpoints: []string{
+	// 		"http://localhost:2379",
+	// 	},
+	// })
 
-	defer store.Close()
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// httpTransport := transports.NewHttpServer()
+	// httpTransport.Configure()
+
+	// api.RegisterModules(httpTransport, db, store)
+
+	// if err := httpTransport.Start(":8080"); err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// defer store.Close()
 }
