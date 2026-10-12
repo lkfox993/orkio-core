@@ -22,8 +22,7 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Println(333888, definition.Key)
-	fmt.Println(definition.Nodes)
+	fmt.Println(definition.Key, definition.Nodes)
 
 	// db, err := postgres.New( /*os.Getenv("DATABASE_URL")*/ "postgres://orkio:password@localhost:5439/orkio")
 
