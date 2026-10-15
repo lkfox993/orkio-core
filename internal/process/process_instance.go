@@ -8,9 +8,15 @@ const (
 	StatusFailed    Status = "failed"
 )
 
-type ProcessInstance struct {
+type Process struct {
 	ID         string
 	WorkflowID string
 	Status     Status
+	Variables  map[string]any
+}
+
+type CreateProcessInput struct {
+	WorkflowID string
+	Version    *int
 	Variables  map[string]any
 }

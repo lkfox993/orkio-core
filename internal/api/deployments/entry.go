@@ -1,29 +1,32 @@
 package deployments
 
 import (
+	"github.com/lkfox993/orkio-core/internal/app"
+	"github.com/lkfox993/orkio-core/internal/deployment"
 	"github.com/lkfox993/orkio-core/internal/storage/postgres"
-	"github.com/lkfox993/orkio-core/internal/storage/tikv"
 	"github.com/lkfox993/orkio-core/internal/transports"
 )
 
 type Module struct {
-	h     *transports.HttpServer
-	db    *postgres.Database
-	store *tikv.Database
+	h *transports.HttpServer
 }
 
-func NewModule(h *transports.HttpServer, db *postgres.Database, store *tikv.Database) *Module {
+func NewModule(h *transports.HttpServer) *Module {
 
 	return &Module{
-		h:     h,
-		db:    db,
-		store: store,
+		h: h,
 	}
 }
 
 func (m *Module) Init() {
 
-	repository := NewRepository(m.db)
+	db, err := app.Resolve[*postgres.Database]("database")
+
+	if err != nil {
+		panic(err)
+	}
+
+	repository := deployment.NewDeploymentRepository(db)
 	service := NewService(repository)
 	handler := NewHandler(service)
 

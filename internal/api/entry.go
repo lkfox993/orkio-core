@@ -2,14 +2,18 @@ package api
 
 import (
 	"github.com/lkfox993/orkio-core/internal/api/deployments"
-	"github.com/lkfox993/orkio-core/internal/storage/postgres"
-	"github.com/lkfox993/orkio-core/internal/storage/tikv"
+	"github.com/lkfox993/orkio-core/internal/api/incidents"
+	"github.com/lkfox993/orkio-core/internal/api/processes"
+	"github.com/lkfox993/orkio-core/internal/api/workflows"
 	"github.com/lkfox993/orkio-core/internal/transports"
 )
 
-func RegisterModules(http *transports.HttpServer, db *postgres.Database, store *tikv.Database) error {
+func RegisterModules(http *transports.HttpServer) error {
 
-	deployments.NewModule(http, db, store).Init()
+	deployments.NewModule(http).Init()
+	workflows.NewModule(http).Init()
+	processes.NewModule(http).Init()
+	incidents.NewModule(http).Init()
 
 	return nil
 }

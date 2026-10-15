@@ -22,24 +22,24 @@ func (h *Handler) GetByID(c *echo.Context) error {
 
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 
-	campaign, err := h.service.repository.GetByID(c.Request().Context(), id)
+	deployment, err := h.service.repository.GetByID(c.Request().Context(), id)
 
 	if err != nil {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, campaign)
+	return c.JSON(http.StatusOK, deployment)
 }
 
 func (h *Handler) GetAll(c *echo.Context) error {
 
-	campaigns, err := h.service.GetAll(c.Request().Context())
+	deployments, err := h.service.GetAll(c.Request().Context())
 
 	if err != nil {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, campaigns)
+	return c.JSON(http.StatusOK, deployments)
 }
 
 func (h *Handler) Create(c *echo.Context) error {
@@ -106,7 +106,7 @@ func (h *Handler) Update(c *echo.Context) error {
 		return err
 	}
 
-	campaign, err := h.service.Update(
+	deployment, err := h.service.Update(
 		c.Request().Context(),
 		id,
 		UpdateDeploymentInput{
@@ -117,7 +117,7 @@ func (h *Handler) Update(c *echo.Context) error {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, campaign)
+	return c.JSON(http.StatusOK, deployment)
 }
 
 func (h *Handler) Delete(c *echo.Context) error {
@@ -125,7 +125,7 @@ func (h *Handler) Delete(c *echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid campaign id")
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid deployment id")
 	}
 
 	if err := h.service.Delete(c.Request().Context(), id); err != nil {

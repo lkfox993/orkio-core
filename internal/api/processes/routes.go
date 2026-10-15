@@ -2,7 +2,7 @@ package processes
 
 import "github.com/labstack/echo/v5"
 
-func RegisterRoutes(e *echo.Group, handler *Handler) {
+func RegisterRoutes(e *echo.Echo, handler *Handler) {
 
 	group := e.Group("/processes")
 

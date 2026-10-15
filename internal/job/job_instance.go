@@ -14,10 +14,10 @@ const (
 )
 
 type Job struct {
-	ID                string
-	ProcessInstanceID string
-	StepID            string
-	Type              string
+	ID        string
+	ProcessID string
+	StepID    string
+	Type      string
 
 	Status      Status
 	Attempt     int

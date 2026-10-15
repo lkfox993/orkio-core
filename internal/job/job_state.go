@@ -1,29 +1,28 @@
-package tikv
+package job
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
 
-	"github.com/lkfox993/orkio-core/internal/job"
 	"github.com/tikv/client-go/v2/txnkv"
 )
 
-type JobRepository struct {
+type JobState struct {
 	db *txnkv.Client
 }
 
-func NewJobRepository(db *txnkv.Client) *JobRepository {
-	return &JobRepository{
+func NewJobState(db *txnkv.Client) *JobState {
+	return &JobState{
 		db: db,
 	}
 }
 
-func (r *JobRepository) Get(ctx context.Context, id string) (*job.Job, error) {
+func (s *JobState) Get(ctx context.Context, id string) (*Job, error) {
 
 	key := jobKey(id)
 
-	txn, err := r.db.Begin()
+	txn, err := s.db.Begin()
 
 	if err != nil {
 		return nil, err
@@ -37,7 +36,7 @@ func (r *JobRepository) Get(ctx context.Context, id string) (*job.Job, error) {
 		return nil, fmt.Errorf("get job %q: %w", id, err)
 	}
 
-	var job job.Job
+	var job Job
 
 	if err := json.Unmarshal(value, &job); err != nil {
 		return nil, fmt.Errorf("unmarshal job %q: %w", id, err)
@@ -46,7 +45,7 @@ func (r *JobRepository) Get(ctx context.Context, id string) (*job.Job, error) {
 	return &job, nil
 }
 
-func (r *JobRepository) Create(ctx context.Context, job *job.Job) error {
+func (s *JobState) Create(ctx context.Context, job *Job) error {
 	key := jobKey(job.ID)
 
 	value, err := json.Marshal(job)
@@ -55,7 +54,7 @@ func (r *JobRepository) Create(ctx context.Context, job *job.Job) error {
 		return fmt.Errorf("marshal job %q: %w", job.ID, err)
 	}
 
-	txn, err := r.db.Begin()
+	txn, err := s.db.Begin()
 
 	if err != nil {
 		return err
@@ -84,7 +83,7 @@ func (r *JobRepository) Create(ctx context.Context, job *job.Job) error {
 	return nil
 }
 
-func (r *JobRepository) Update(ctx context.Context, job *job.Job) error {
+func (s *JobState) Update(ctx context.Context, job *Job) error {
 	key := jobKey(job.ID)
 
 	value, err := json.Marshal(job)
@@ -92,7 +91,7 @@ func (r *JobRepository) Update(ctx context.Context, job *job.Job) error {
 		return fmt.Errorf("marshal job %q: %w", job.ID, err)
 	}
 
-	txn, err := r.db.Begin()
+	txn, err := s.db.Begin()
 
 	if err != nil {
 		return err
@@ -111,31 +110,31 @@ func (r *JobRepository) Update(ctx context.Context, job *job.Job) error {
 	return nil
 }
 
-func (r *JobRepository) Complete(ctx context.Context, id string) error {
-	j, err := r.Get(ctx, id)
+func (s *JobState) Complete(ctx context.Context, id string) error {
+	j, err := s.Get(ctx, id)
 	if err != nil {
 		return err
 	}
 
-	j.Status = job.StatusCompleted
+	j.Status = StatusCompleted
 
-	return r.Update(ctx, j)
+	return s.Update(ctx, j)
 }
 
-func (r *JobRepository) Fail(
+func (s *JobState) Fail(
 	ctx context.Context,
 	id string,
 	reason string,
 ) error {
-	j, err := r.Get(ctx, id)
+	j, err := s.Get(ctx, id)
 	if err != nil {
 		return err
 	}
 
-	j.Status = job.StatusFailed
+	j.Status = StatusFailed
 	j.Error = reason
 
-	return r.Update(ctx, j)
+	return s.Update(ctx, j)
 }
 
 func jobKey(id string) string {

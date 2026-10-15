@@ -5,39 +5,40 @@ import (
 	"io"
 
 	"github.com/google/uuid"
-	"github.com/lkfox993/orkio-core/internal/api/workflows"
+	"github.com/lkfox993/orkio-core/internal/deployment"
+	"github.com/lkfox993/orkio-core/internal/storage/postgres/models"
 	"gorm.io/gorm"
 )
 
 type Service struct {
-	repository *Repository
+	repository *deployment.DeploymentRepository
 }
 
-func NewService(repository *Repository) *Service {
+func NewService(repository *deployment.DeploymentRepository) *Service {
 	return &Service{
 		repository: repository,
 	}
 }
 
-func (s *Service) GetByID(ctx context.Context, id int64) (*Deployment, error) {
+func (s *Service) GetByID(ctx context.Context, id int64) (*models.Deployment, error) {
 	return s.repository.GetByID(ctx, id)
 }
 
-func (s *Service) GetAll(ctx context.Context) ([]Deployment, error) {
+func (s *Service) GetAll(ctx context.Context) ([]models.Deployment, error) {
 	return s.repository.GetAll(ctx)
 }
 
-func (s *Service) Create(ctx context.Context, input CreateDeploymentInput) (*Deployment, error) {
+func (s *Service) Create(ctx context.Context, input CreateDeploymentInput) (*models.Deployment, error) {
 
 	var tenantID = uuid.New()
 
-	deployment := &Deployment{
+	deployment := &models.Deployment{
 		ID:       uuid.New(),
 		TenantID: tenantID,
 		Name:     input.Name,
 	}
 
-	err := s.repository.db.Transaction(func(tx *gorm.DB) error {
+	err := s.repository.DB.Transaction(func(tx *gorm.DB) error {
 		if err := s.repository.Create(ctx, deployment, tx); err != nil {
 			return err
 		}
@@ -62,7 +63,7 @@ func (s *Service) Create(ctx context.Context, input CreateDeploymentInput) (*Dep
 				return err
 			}
 
-			workflow := &workflows.Workflow{
+			workflow := &models.Workflow{
 				ID:       uuid.New(),
 				TenantID: tenantID,
 				Key:      "workflow-id",
@@ -73,7 +74,7 @@ func (s *Service) Create(ctx context.Context, input CreateDeploymentInput) (*Dep
 				return err
 			}
 
-			version := &workflows.WorkflowVersion{
+			version := &models.WorkflowVersion{
 				ID:           uuid.New(),
 				DeploymentID: deployment.ID,
 				TenantID:     tenantID,
@@ -98,8 +99,8 @@ func (s *Service) Create(ctx context.Context, input CreateDeploymentInput) (*Dep
 	return deployment, nil
 }
 
-func (s *Service) Update(ctx context.Context, id int64, input UpdateDeploymentInput) (*Deployment, error) {
-	deployment := &Deployment{
+func (s *Service) Update(ctx context.Context, id int64, input UpdateDeploymentInput) (*models.Deployment, error) {
+	deployment := &models.Deployment{
 		Name: input.Name,
 	}
 
