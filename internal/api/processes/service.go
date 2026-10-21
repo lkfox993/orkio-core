@@ -2,27 +2,47 @@ package processes
 
 import (
 	"context"
+	"fmt"
+
+	"github.com/lkfox993/orkio-core/internal/app"
+	"github.com/lkfox993/orkio-core/internal/coordinator"
+	"github.com/lkfox993/orkio-core/internal/process"
+	"github.com/lkfox993/orkio-core/internal/storage/postgres/models"
 )
 
 type Service struct {
-	repository *Repository
+	repository *process.ProcessRepository
 }
 
-func NewService(repository *Repository) *Service {
+func NewService(repository *process.ProcessRepository) *Service {
 	return &Service{
 		repository: repository,
 	}
 }
 
-func (s *Service) GetByID(ctx context.Context, id int64) (*Process, error) {
+func (s *Service) GetByID(ctx context.Context, id int64) (*models.ProcessModel, error) {
 	return s.repository.GetByID(ctx, id)
 }
 
-func (s *Service) GetAll(ctx context.Context) ([]Process, error) {
+func (s *Service) GetAll(ctx context.Context) ([]models.ProcessModel, error) {
 	return s.repository.GetAll(ctx)
 }
 
-func (s *Service) Create(ctx context.Context, input any /*coordinator.CreateProcessInput*/) (*Process, error) {
-	// return s.engine.CreateProcess(ctx, input)
+func (s *Service) Create(ctx context.Context, input coordinator.CreateProcessInput) (*models.ProcessModel, error) {
+
+	coordinator, err := app.Resolve[*coordinator.Engine]("coordinator")
+
+	if err != nil {
+		panic(err)
+	}
+
+	p, err := coordinator.CreateProcess(ctx, input.WorkflowID, input.Variables)
+
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println(p)
+
 	return nil, nil
 }

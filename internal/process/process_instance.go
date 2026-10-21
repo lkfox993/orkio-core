@@ -1,18 +1,24 @@
 package process
 
+import (
+	"github.com/google/uuid"
+	"gorm.io/datatypes"
+)
+
 type Status string
 
 const (
+	StatusPending   Status = "pending"
 	StatusRunning   Status = "running"
 	StatusCompleted Status = "completed"
 	StatusFailed    Status = "failed"
 )
 
 type Process struct {
-	ID         string
-	WorkflowID string
-	Status     Status
-	Variables  map[string]any
+	ID               uuid.UUID
+	WorkflowID       uuid.UUID
+	Status           Status
+	InitialVariables datatypes.JSONMap
 }
 
 type CreateProcessInput struct {

@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v5"
+	"github.com/lkfox993/orkio-core/internal/coordinator"
 )
 
 type Handler struct {
@@ -51,17 +52,15 @@ func (h *Handler) Create(c *echo.Context) error {
 		return err
 	}
 
-	// process, err := h.service.Create(c.Request().Context(), coordinator.CreateProcessInput{
-	// 	WorkflowID: req.WorkflowID,
-	// 	Version:    req.Version,
-	// 	Variables:  req.Variables,
-	// })
+	process, err := h.service.Create(c.Request().Context(), coordinator.CreateProcessInput{
+		WorkflowID: req.WorkflowID,
+		Version:    req.Version,
+		Variables:  req.Variables,
+	})
 
-	// if err != nil {
-	// 	return err
-	// }
+	if err != nil {
+		return err
+	}
 
-	// return c.JSON(http.StatusCreated, process)
-
-	return nil
+	return c.JSON(http.StatusCreated, process)
 }

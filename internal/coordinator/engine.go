@@ -28,6 +28,7 @@ type Engine struct {
 
 func NewEngine(state StateStore, db *postgres.Database) *Engine {
 	return &Engine{
+		db:    db,
 		state: state,
 	}
 }
@@ -52,32 +53,40 @@ func (e *Engine) CreateProcess(
 		return nil, fmt.Errorf("get workflow: %w", err)
 	}
 
-	instance := &process.Process{
-		ID:         uuid.NewString(),
-		WorkflowID: workflow.ID,
-		Variables:  variables,
-		Status:     process.StatusRunning,
+	p := &process.Process{
+		ID:               uuid.New(),
+		WorkflowID:       workflow.ID,
+		InitialVariables: variables,
+		Status:           process.StatusPending,
 	}
 
-	if err := e.state.CreateProcess(ctx, instance); err != nil {
+	processRepository := process.NewProcessRepository(e.db)
+
+	if err := processRepository.Create(ctx, p, nil); err != nil {
+		return nil, err
+	}
+
+	if err := e.state.CreateProcess(ctx, p); err != nil {
 		return nil, fmt.Errorf("create process instance: %w", err)
 	}
 
-	// найти первый executable node
-	startNodes := workflow.Definiton.StartNodes()
+	return nil, nil
 
-	if len(startNodes) == 0 {
-		return nil, fmt.Errorf("workflow has no start node")
-	}
+	// // найти первый executable node
+	// startNodes := workflow.Definiton.StartNodes()
 
-	// тут надо подумать так как бывают start_node from message
-	for _, startNode := range startNodes {
-		if err := e.activateNode(ctx, instance, startNode); err != nil {
-			return nil, err
-		}
-	}
+	// if len(startNodes) == 0 {
+	// 	return nil, fmt.Errorf("workflow has no start node")
+	// }
 
-	return instance, nil
+	// // тут надо подумать так как бывают start_node from message
+	// for _, startNode := range startNodes {
+	// 	if err := e.activateNode(ctx, process, startNode); err != nil {
+	// 		return nil, err
+	// 	}
+	// }
+
+	// return process, nil
 }
 
 func (e *Engine) activateNode(
@@ -85,20 +94,22 @@ func (e *Engine) activateNode(
 	instance *process.Process,
 	node nodes.Node,
 ) error {
-	switch n := node.(type) {
+	// switch n := node.(type) {
 
-	case *nodes.StartEvent:
-		return e.activateNode(ctx, instance, n.Next())
+	// case *nodes.StartEvent:
+	// 	return e.activateNode(ctx, instance, n.Next())
 
-	case *nodes.ServiceTask:
-		return e.createJob(ctx, instance, n)
+	// case *nodes.ServiceTask:
+	// 	return e.createJob(ctx, instance, n)
 
-	case *nodes.EndEvent:
-		return e.state.CompleteProcess(ctx, instance.ID)
+	// case *nodes.EndEvent:
+	// 	return e.state.CompleteProcess(ctx, instance.ID)
 
-	default:
-		return fmt.Errorf("unsupported node type: %T", node)
-	}
+	// default:
+	// 	return fmt.Errorf("unsupported node type: %T", node)
+	// }
+
+	return nil
 }
 
 func (e *Engine) createJob(
@@ -108,7 +119,7 @@ func (e *Engine) createJob(
 ) error {
 
 	j := &job.Job{
-		ID:        uuid.NewString(),
+		ID:        uuid.New(),
 		ProcessID: process.ID,
 		StepID:    node.Base().ID,
 		Type:      node.NodeType(),

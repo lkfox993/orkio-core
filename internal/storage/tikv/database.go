@@ -11,7 +11,7 @@ type Config struct {
 }
 
 type Database struct {
-	client *txnkv.Client
+	Client *txnkv.Client
 }
 
 func New(cfg Config) (*Database, error) {
@@ -27,10 +27,10 @@ func New(cfg Config) (*Database, error) {
 	}
 
 	return &Database{
-		client: client,
+		Client: client,
 	}, nil
 }
 
 func (s *Database) Close() error {
-	return s.client.Close()
+	return s.Client.Close()
 }

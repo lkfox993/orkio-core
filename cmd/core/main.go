@@ -6,12 +6,15 @@ import (
 	// "log"
 	"context"
 	"fmt"
+	"log"
 	"os"
 
 	// "github.com/lkfox993/orkio-core/internal/api"
 	// "github.com/lkfox993/orkio-core/internal/app"
 	// "github.com/lkfox993/orkio-core/internal/transports"
+	"github.com/lkfox993/orkio-core/internal/api"
 	"github.com/lkfox993/orkio-core/internal/app"
+	"github.com/lkfox993/orkio-core/internal/transports"
 	"github.com/lkfox993/orkio-core/internal/workflow"
 )
 
@@ -30,14 +33,14 @@ func main() {
 	ctx := context.Background()
 	app.New(ctx)
 
-	// httpTransport := transports.NewHttpServer()
-	// httpTransport.Configure()
+	httpTransport := transports.NewHttpServer()
+	httpTransport.Configure()
 
-	// api.RegisterModules(httpTransport)
+	api.RegisterModules(httpTransport)
 
-	// if err := httpTransport.Start(":8080"); err != nil {
-	// 	log.Fatal(err)
-	// }
+	if err := httpTransport.Start(":8080"); err != nil {
+		log.Fatal(err)
+	}
 
 	// defer store.Close()
 }

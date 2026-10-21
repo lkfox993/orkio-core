@@ -6,12 +6,16 @@ import (
 	"github.com/google/uuid"
 )
 
-type Workflow struct {
+type WorkflowModel struct {
 	ID        uuid.UUID `gorm:"type:uuid;primaryKey"`
 	TenantID  uuid.UUID
 	Key       string
 	Name      string
 	CreatedAt time.Time
+}
+
+func (WorkflowModel) TableName() string {
+	return "workflows"
 }
 
 type WorkflowVersion struct {
@@ -24,3 +28,9 @@ type WorkflowVersion struct {
 	Definition   string `gorm:"type:jsonb;not null"`
 	CreatedAt    time.Time
 }
+
+// func (m *WorkflowModel) ToDomain() *workflow.Workflow {
+// 	return &workflow.Workflow{
+// 		ID: m.ID.String(),
+// 	}
+// }

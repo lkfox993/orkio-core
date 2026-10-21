@@ -23,7 +23,7 @@ func (cv *CustomValidator) Validate(i any) error {
 		// Optionally return the error to let each route control the status code.
 		// return echo.ErrBadRequest.Wrap(err)
 
-		fmt.Println(err)
+		fmt.Println(4444, err)
 		return err
 	}
 

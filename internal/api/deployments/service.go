@@ -63,7 +63,7 @@ func (s *Service) Create(ctx context.Context, input CreateDeploymentInput) (*mod
 				return err
 			}
 
-			workflow := &models.Workflow{
+			workflow := &models.WorkflowModel{
 				ID:       uuid.New(),
 				TenantID: tenantID,
 				Key:      "workflow-id",

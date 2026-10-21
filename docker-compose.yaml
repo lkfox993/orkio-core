@@ -4,6 +4,25 @@ version: "3"
 
 services:
 
+  orkio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /app
+    volumes:
+      - .:/app
+      - go-mod-cache:/go/pkg/mod
+      - go-build-cache:/root/.cache/go-build
+    environment:
+      TIKV_PD_ADDR: ork-tikv-pd:2379
+    depends_on:
+      - ork-tikv-pd
+      - ork-tikv
+      - ork-postgres
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+
   ork-postgres:
     # Official Postgres image from DockerHub (we use the last version)
     image: "postgres:latest"
@@ -62,7 +81,7 @@ services:
       - --name=pd
       - --data-dir=/data/pd
       - --client-urls=http://0.0.0.0:2379
-      - --advertise-client-urls=http://localhost:2379,http://ork-tikv-pd:2379
+      - --advertise-client-urls=http://ork-tikv-pd:2379
       - --peer-urls=http://0.0.0.0:2380
       - --advertise-peer-urls=http://ork-tikv-pd:2380
       - --initial-cluster=pd=http://ork-tikv-pd:2380
@@ -84,5 +103,7 @@ services:
 
 volumes:
   pulsar_data:
+  go-mod-cache:
+  go-build-cache:
 
   

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/lkfox993/orkio-core/internal/storage/postgres"
+	"github.com/lkfox993/orkio-core/internal/storage/postgres/models"
 	"gorm.io/gorm"
 )
 
@@ -25,9 +26,9 @@ func (r *ProcessRepository) getDB(tx *gorm.DB) *gorm.DB {
 	return r.db.DB
 }
 
-func (r *ProcessRepository) GetByID(ctx context.Context, id int64) (*Process, error) {
+func (r *ProcessRepository) GetByID(ctx context.Context, id int64) (*models.ProcessModel, error) {
 
-	var process Process
+	var process models.ProcessModel
 
 	err := r.db.WithContext(ctx).
 		First(&process, id).
@@ -40,8 +41,8 @@ func (r *ProcessRepository) GetByID(ctx context.Context, id int64) (*Process, er
 	return &process, nil
 }
 
-func (r *ProcessRepository) GetAll(ctx context.Context) ([]Process, error) {
-	var processes []Process
+func (r *ProcessRepository) GetAll(ctx context.Context) ([]models.ProcessModel, error) {
+	var processes []models.ProcessModel
 
 	if err := r.db.WithContext(ctx).Find(&processes).Error; err != nil {
 		return nil, err

@@ -5,13 +5,14 @@ import (
 
 	"github.com/goioc/di"
 	// "github.com/lkfox993/orkio-core/internal/coordinator"
+	"github.com/lkfox993/orkio-core/internal/coordinator"
 	"github.com/lkfox993/orkio-core/internal/storage/postgres"
 	"github.com/lkfox993/orkio-core/internal/storage/tikv"
 )
 
 func registerDependencies() error {
 
-	db, err := postgres.New( /*os.Getenv("DATABASE_URL")*/ "postgres://orkio:password@localhost:5439/orkio")
+	db, err := postgres.New( /*os.Getenv("DATABASE_URL")*/ "postgres://orkio:password@ork-postgres:5432/orkio")
 
 	if err != nil {
 		return err
@@ -21,9 +22,9 @@ func registerDependencies() error {
 		return err
 	}
 
-	store, err := tikv.New(tikv.Config{
+	stateDB, err := tikv.New(tikv.Config{
 		Endpoints: []string{
-			"http://localhost:2379",
+			"http://ork-tikv-pd:2379",
 		},
 	})
 
@@ -31,17 +32,17 @@ func registerDependencies() error {
 		return err
 	}
 
-	if _, err := di.RegisterBeanInstance("store", store); err != nil {
+	if _, err := di.RegisterBeanInstance("store", stateDB); err != nil {
 		return err
 	}
 
-	// stateStore := tikv.NewStateStore()
+	stateStore := tikv.NewStateStore(stateDB)
 
-	// coordinator := coordinator.NewEngine(stateStore)
+	coordinator := coordinator.NewEngine(stateStore, db)
 
-	// if _, err := di.RegisterBeanInstance("coordinator", coordinator); err != nil {
-	// 	return err
-	// }
+	if _, err := di.RegisterBeanInstance("coordinator", coordinator); err != nil {
+		return err
+	}
 
 	return nil
 }

@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/lkfox993/orkio-core/internal/storage/postgres"
+	"github.com/lkfox993/orkio-core/internal/storage/postgres/models"
 	"gorm.io/gorm"
 )
 
@@ -13,6 +14,10 @@ type WorkflowRepository struct {
 }
 
 func NewWorkflowRepository(db *postgres.Database) *WorkflowRepository {
+
+	if db == nil {
+		panic("WorkflowRepository: db is nil")
+	}
 
 	return &WorkflowRepository{
 		db: db,
@@ -27,9 +32,9 @@ func (r *WorkflowRepository) getDB(tx *gorm.DB) *gorm.DB {
 	return r.db.DB
 }
 
-func (r *WorkflowRepository) GetByID(ctx context.Context, id int64) (*Workflow, error) {
+func (r *WorkflowRepository) GetByID(ctx context.Context, id int64) (*models.WorkflowModel, error) {
 
-	var workflow Workflow
+	var workflow models.WorkflowModel
 
 	err := r.db.WithContext(ctx).
 		First(&workflow, id).
@@ -42,8 +47,8 @@ func (r *WorkflowRepository) GetByID(ctx context.Context, id int64) (*Workflow, 
 	return &workflow, nil
 }
 
-func (r *WorkflowRepository) GetAll(ctx context.Context) ([]Workflow, error) {
-	var workflows []Workflow
+func (r *WorkflowRepository) GetAll(ctx context.Context) ([]models.WorkflowModel, error) {
+	var workflows []models.WorkflowModel
 
 	if err := r.db.WithContext(ctx).Find(&workflows).Error; err != nil {
 		return nil, err
@@ -56,9 +61,9 @@ func (r *WorkflowRepository) GetByKey(
 	ctx context.Context,
 	tenantID uuid.UUID,
 	key string,
-) (*Workflow, error) {
+) (*models.WorkflowModel, error) {
 
-	var workflow Workflow
+	var workflow models.WorkflowModel
 
 	err := r.db.WithContext(ctx).
 		Where("tenant_id = ? AND key = ?", tenantID, key).

@@ -46,7 +46,7 @@ func (s *JobState) Get(ctx context.Context, id string) (*Job, error) {
 }
 
 func (s *JobState) Create(ctx context.Context, job *Job) error {
-	key := jobKey(job.ID)
+	key := jobKey(job.ID.String())
 
 	value, err := json.Marshal(job)
 
@@ -84,7 +84,7 @@ func (s *JobState) Create(ctx context.Context, job *Job) error {
 }
 
 func (s *JobState) Update(ctx context.Context, job *Job) error {
-	key := jobKey(job.ID)
+	key := jobKey(job.ID.String())
 
 	value, err := json.Marshal(job)
 	if err != nil {

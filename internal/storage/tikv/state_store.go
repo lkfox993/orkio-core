@@ -8,10 +8,13 @@ import (
 )
 
 type StateStore struct {
+	*ProcessStateStore
 }
 
-func NewStateStore() *StateStore {
-	return &StateStore{}
+func NewStateStore(stateDB *Database) *StateStore {
+	return &StateStore{
+		ProcessStateStore: NewProcessStateStore(stateDB),
+	}
 }
 
 func (s *StateStore) GetJob(ctx context.Context, id string) (*job.Job, error) {
@@ -30,8 +33,8 @@ func (s *StateStore) GetProcess(ctx context.Context, id string) (*process.Proces
 	return nil, nil
 }
 
-func (s *StateStore) CreateProcess(ctx context.Context, instance *process.Process) error {
-	return nil
+func (s *StateStore) CreateProcess(ctx context.Context, p *process.Process) error {
+	return s.ProcessStateStore.Create(ctx, p)
 }
 
 func (s *StateStore) CompleteProcess(ctx context.Context, id string) error {

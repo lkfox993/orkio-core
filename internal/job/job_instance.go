@@ -1,6 +1,10 @@
 package job
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type Status string
 
@@ -14,8 +18,8 @@ const (
 )
 
 type Job struct {
-	ID        string
-	ProcessID string
+	ID        uuid.UUID
+	ProcessID uuid.UUID
 	StepID    string
 	Type      string
 
