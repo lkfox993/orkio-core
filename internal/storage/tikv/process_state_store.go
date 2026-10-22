@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/google/uuid"
 	tikverr "github.com/tikv/client-go/v2/error"
 
 	"github.com/lkfox993/orkio-core/internal/process"
@@ -23,25 +24,29 @@ func NewProcessStateStore(stateDB *Database) *ProcessStateStore {
 
 func (s *ProcessStateStore) Get(
 	ctx context.Context,
-	id string,
+	tenantID uuid.UUID,
+	processID uuid.UUID,
 ) (*process.Process, error) {
-	key := processStateKey(id)
+
+	key := processStateKey(tenantID, processID)
 
 	txn, err := s.stateDB.Client.Begin()
+
 	if err != nil {
 		return nil, err
 	}
 	defer txn.Rollback()
 
 	value, err := txn.Get(ctx, []byte(key))
+
 	if err != nil {
-		return nil, fmt.Errorf("get process %q: %w", id, err)
+		return nil, fmt.Errorf("get process %q: %w", processID, err)
 	}
 
 	var instance process.Process
 
 	if err := json.Unmarshal(value, &instance); err != nil {
-		return nil, fmt.Errorf("unmarshal process %q: %w", id, err)
+		return nil, fmt.Errorf("unmarshal process %q: %w", processID, err)
 	}
 
 	return &instance, nil
@@ -49,9 +54,10 @@ func (s *ProcessStateStore) Get(
 
 func (s *ProcessStateStore) Create(
 	ctx context.Context,
+
 	process *process.Process,
 ) error {
-	key := processStateKey(process.ID.String())
+	key := processStateKey(process.ID, process.TenantID)
 
 	value, err := json.Marshal(process)
 
@@ -88,8 +94,13 @@ func (s *ProcessStateStore) Create(
 	}
 }
 
-func processStateKey(id string) string {
-	return "processes/" + id
+func processStateKey(tenantID uuid.UUID, processID uuid.UUID) string {
+
+	return fmt.Sprintf(
+		"tenants/%s/processes/%s/state",
+		tenantID,
+		processID,
+	)
 }
 
 func isNotFound(err error) bool {

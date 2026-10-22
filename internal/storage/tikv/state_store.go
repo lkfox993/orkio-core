@@ -3,12 +3,14 @@ package tikv
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/lkfox993/orkio-core/internal/job"
 	"github.com/lkfox993/orkio-core/internal/process"
 )
 
 type StateStore struct {
 	*ProcessStateStore
+	*NodeExecutionStateStore
 }
 
 func NewStateStore(stateDB *Database) *StateStore {
@@ -39,4 +41,18 @@ func (s *StateStore) CreateProcess(ctx context.Context, p *process.Process) erro
 
 func (s *StateStore) CompleteProcess(ctx context.Context, id string) error {
 	return nil
+}
+
+func (s *StateStore) CreateNodeExecution(
+	ctx context.Context,
+	execution *process.NodeExecution,
+) error {
+	return s.CreateNodeExecution(ctx, execution)
+}
+
+func (s *StateStore) CompleteNodeExecution(
+	ctx context.Context,
+	executionID uuid.UUID,
+) error {
+	return s.CompleteNodeExecution(ctx, executionID)
 }

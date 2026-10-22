@@ -16,6 +16,7 @@ const (
 
 type Process struct {
 	ID               uuid.UUID
+	TenantID         uuid.UUID
 	WorkflowID       uuid.UUID
 	Status           Status
 	InitialVariables datatypes.JSONMap

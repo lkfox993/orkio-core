@@ -3,6 +3,7 @@ package coordinator
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/lkfox993/orkio-core/internal/events"
@@ -82,34 +83,57 @@ func (e *Engine) CreateProcess(
 	}
 
 	// тут надо подумать так как бывают start_node from message
-	for _, startNode := range startNodes {
-		if err := e.activateNode(ctx, p, startNode); err != nil {
-			return nil, err
-		}
+	// for _, startNode := range startNodes {
+	// 	if err := e.activateNode(ctx, p, startNode); err != nil {
+	// 		return nil, err
+	// 	}
+	// }
+
+	if err := e.activateNodes(ctx, p, startNodes); err != nil {
+		return nil, err
 	}
 
 	return p, nil
 }
 
-func (e *Engine) activateNode(
+func (e *Engine) activateNodes(
 	ctx context.Context,
-	instance *process.Process,
-	node nodes.Node,
+	p *process.Process,
+	nodesList []nodes.Node,
 ) error {
-	// switch n := node.(type) {
 
-	// case *nodes.StartEvent:
-	// 	return e.activateNode(ctx, instance, n.Next())
+	for _, node := range nodesList {
+		switch n := node.(type) {
 
-	// case *nodes.ServiceTask:
-	// 	return e.createJob(ctx, instance, n)
+		case *nodes.StartEvent:
 
-	// case *nodes.EndEvent:
-	// 	return e.state.CompleteProcess(ctx, instance.ID)
+			now := time.Now()
 
-	// default:
-	// 	return fmt.Errorf("unsupported node type: %T", node)
-	// }
+			execution := &process.NodeExecution{
+				ID:          uuid.New(),
+				ProcessID:   p.ID,
+				NodeID:      n.Base().ID,
+				Status:      process.NodeStatusCompleted,
+				StartedAt:   now,
+				CompletedAt: &now,
+			}
+
+			if err := e.state.CreateNodeExecution(ctx, execution); err != nil {
+				return err
+			}
+
+			return e.activateNodes(ctx, p, n.GetChildren())
+
+		// case *nodes.ServiceTask:
+		// 	return e.createJob(ctx, instance, n)
+
+		// case *nodes.EndEvent:
+		// 	return e.state.CompleteProcess(ctx, process.ID.String())
+
+		default:
+			return fmt.Errorf("unsupported node type: %T", node)
+		}
+	}
 
 	return nil
 }
