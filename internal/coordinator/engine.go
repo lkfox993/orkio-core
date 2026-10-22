@@ -13,7 +13,7 @@ import (
 	"github.com/lkfox993/orkio-core/internal/workflow/nodes"
 )
 
-const TenantID = "592cf5ef-f12e-4ca2-b66b-27f5f42ac07c"
+const TenantID = "6dfc2e0e-8207-4f73-8b46-357c362e23a7"
 
 type CreateProcessInput struct {
 	WorkflowID string
@@ -47,7 +47,7 @@ func (e *Engine) CreateProcess(
 
 	workflowRepository := workflow.NewWorkflowRepository(e.db)
 
-	workflow, err := workflowRepository.GetByKey(ctx, tenantID, workflowKey)
+	workflowRow, err := workflowRepository.GetByKey(ctx, tenantID, workflowKey, nil)
 
 	if err != nil {
 		return nil, fmt.Errorf("get workflow: %w", err)
@@ -55,7 +55,7 @@ func (e *Engine) CreateProcess(
 
 	p := &process.Process{
 		ID:               uuid.New(),
-		WorkflowID:       workflow.ID,
+		WorkflowID:       workflowRow.ID,
 		InitialVariables: variables,
 		Status:           process.StatusPending,
 	}
@@ -70,23 +70,25 @@ func (e *Engine) CreateProcess(
 		return nil, fmt.Errorf("create process instance: %w", err)
 	}
 
-	return nil, nil
+	var definition = workflowRow.LoadedVersion().Definition
 
-	// // найти первый executable node
-	// startNodes := workflow.Definiton.StartNodes()
+	parseDefinition, err := workflow.ParseDefinition([]byte(definition))
 
-	// if len(startNodes) == 0 {
-	// 	return nil, fmt.Errorf("workflow has no start node")
-	// }
+	// найти первый executable node
+	startNodes := parseDefinition.StartNodes()
 
-	// // тут надо подумать так как бывают start_node from message
-	// for _, startNode := range startNodes {
-	// 	if err := e.activateNode(ctx, process, startNode); err != nil {
-	// 		return nil, err
-	// 	}
-	// }
+	if len(startNodes) == 0 {
+		return nil, fmt.Errorf("workflow has no start node")
+	}
 
-	// return process, nil
+	// тут надо подумать так как бывают start_node from message
+	for _, startNode := range startNodes {
+		if err := e.activateNode(ctx, p, startNode); err != nil {
+			return nil, err
+		}
+	}
+
+	return p, nil
 }
 
 func (e *Engine) activateNode(

@@ -16,7 +16,3 @@ type ProcessModel struct {
 func (ProcessModel) TableName() string {
 	return "processes"
 }
-
-// func (m *ProcessModel) ToDomain() *process.Process {
-// 	return &process.Process{}
-// }

@@ -12,13 +12,22 @@ type WorkflowModel struct {
 	Key       string
 	Name      string
 	CreatedAt time.Time
+	Versions  []WorkflowVersionModel `json:"versions,omitempty" gorm:"foreignKey:WorkflowID"`
+}
+
+func (m *WorkflowModel) LoadedVersion() *WorkflowVersionModel {
+	if len(m.Versions) == 0 {
+		return nil
+	}
+
+	return &m.Versions[0]
 }
 
 func (WorkflowModel) TableName() string {
 	return "workflows"
 }
 
-type WorkflowVersion struct {
+type WorkflowVersionModel struct {
 	ID           uuid.UUID `gorm:"type:uuid;primaryKey"`
 	TenantID     uuid.UUID `json:"tenant_id" gorm:"type:uuid;not null"`
 	WorkflowID   uuid.UUID `json:"workflow_id" gorm:"type:uuid;not null"`
@@ -29,8 +38,6 @@ type WorkflowVersion struct {
 	CreatedAt    time.Time
 }
 
-// func (m *WorkflowModel) ToDomain() *workflow.Workflow {
-// 	return &workflow.Workflow{
-// 		ID: m.ID.String(),
-// 	}
-// }
+func (WorkflowVersionModel) TableName() string {
+	return "workflow_versions"
+}

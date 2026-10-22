@@ -11,8 +11,8 @@ services:
     working_dir: /app
     volumes:
       - .:/app
-      - go-mod-cache:/go/pkg/mod
-      - go-build-cache:/root/.cache/go-build
+      - go_mod_cache:/go/pkg/mod
+      - go_build_cache:/root/.cache/go-build
     environment:
       TIKV_PD_ADDR: ork-tikv-pd:2379
     depends_on:
@@ -71,6 +71,22 @@ services:
       ork-pulsar:
         condition: service_healthy
 
+  ork-tidb:
+    image: pingcap/tidb:latest
+    container_name: ork-tidb
+    restart: unless-stopped
+    depends_on:
+      - ork-tikv-pd
+      - ork-tikv
+    ports:
+      - "4000:4000"
+      - "10080:10080"
+    command:
+      - --store=tikv
+      - --path=ork-tikv-pd:2379
+      - --host=0.0.0.0
+      - --advertise-address=ork-tidb
+
   ork-tikv-pd:
     image: pingcap/pd:latest
     container_name: ork-tikv-pd
@@ -85,6 +101,8 @@ services:
       - --peer-urls=http://0.0.0.0:2380
       - --advertise-peer-urls=http://ork-tikv-pd:2380
       - --initial-cluster=pd=http://ork-tikv-pd:2380
+    volumes:
+      - pd_data:/data/pd
       
   ork-tikv:
     image: pingcap/tikv:latest
@@ -93,17 +111,37 @@ services:
       - ork-tikv-pd
     ports:
       - "20160:20160"
+      # - "20180:20180"
     command:
       - --addr=0.0.0.0:20160
       - --status-addr=0.0.0.0:20180
+      - --advertise-status-addr=ork-tikv:20180
       - --advertise-addr=ork-tikv:20160
       - --pd-endpoints=ork-tikv-pd:2379
       - --data-dir=/data/tikv
       - --log-file=
+    volumes:
+      - tikv_data:/data/tikv
+  
+  ork-tikv-ui:
+    image: ghcr.io/getstream/tikv-ui:latest
+    container_name: ork-tikv-ui
+    environment:
+      # **IMPORTANT:** Set TIKV_PD_ADDRS to the addresses of your PD nodes
+      TIKV_PD_ADDRS: "ork-tikv-pd:2379"
+      TIKV_UI_METRICS_SCRAPE_INTERVAL: "30s"
+    # Use depends_on to ensure PD nodes are up before the UI starts
+    depends_on:
+      - "ork-tikv-pd"
+    ports:
+      - "8081:8081"
 
 volumes:
+  pd_data:
+  tikv_data:
   pulsar_data:
-  go-mod-cache:
-  go-build-cache:
+  go_mod_cache:
+  go_build_cache:
+  
 
   

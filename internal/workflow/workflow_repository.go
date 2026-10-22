@@ -61,20 +61,45 @@ func (r *WorkflowRepository) GetByKey(
 	ctx context.Context,
 	tenantID uuid.UUID,
 	key string,
+	version *int,
 ) (*models.WorkflowModel, error) {
 
 	var workflow models.WorkflowModel
 
-	err := r.db.WithContext(ctx).
-		Where("tenant_id = ? AND key = ?", tenantID, key).
-		First(&workflow).
-		Error
+	query := r.db.WithContext(ctx).
+		Where("tenant_id = ? AND key = ?", tenantID, key)
 
-	if err != nil {
+	query = query.Preload("Versions", func(db *gorm.DB) *gorm.DB {
+
+		if version == nil {
+			return db.
+				Where("tenant_id = ?", tenantID).
+				Order("version DESC").
+				Limit(1)
+		}
+
+		return db.
+			Where("tenant_id = ? AND version = ?", tenantID, *version)
+	})
+
+	if err := query.First(&workflow).Error; err != nil {
 		return nil, err
 	}
 
 	return &workflow, nil
+
+	// var workflow models.WorkflowModel
+
+	// err := r.db.WithContext(ctx).
+	// 	Where("tenant_id = ? AND key = ?", tenantID, key).
+	// 	First(&workflow).
+	// 	Error
+
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// return &workflow, nil
 }
 
 func (r *WorkflowRepository) Create(ctx context.Context, workflow *Workflow, tx *gorm.DB) error {

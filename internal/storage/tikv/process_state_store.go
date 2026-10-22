@@ -3,7 +3,10 @@ package tikv
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+
+	tikverr "github.com/tikv/client-go/v2/error"
 
 	"github.com/lkfox993/orkio-core/internal/process"
 )
@@ -68,21 +71,21 @@ func (s *ProcessStateStore) Create(
 
 	switch {
 	case err == nil:
-		return fmt.Errorf("%w: %s", process, process.ID)
+		return fmt.Errorf("process %q already exists", process.ID)
 
-	case !isNotFound(err):
+	case isNotFound(err):
+
+		// Process не существует — создаём
+		if err := txn.Set([]byte(key), value); err != nil {
+			return fmt.Errorf("set process %q: %w", process.ID, err)
+		}
+
+		return txn.Commit(ctx)
+
+	default:
+		// Другая ошибка
 		return fmt.Errorf("check process %q: %w", process.ID, err)
 	}
-
-	if err := txn.Set([]byte(key), value); err != nil {
-		return fmt.Errorf("set process %q: %w", process.ID, err)
-	}
-
-	if err := txn.Commit(ctx); err != nil {
-		return fmt.Errorf("commit process %q: %w", process.ID, err)
-	}
-
-	return nil
 }
 
 func processStateKey(id string) string {
@@ -90,9 +93,7 @@ func processStateKey(id string) string {
 }
 
 func isNotFound(err error) bool {
-	// Реализовать через конкретную ошибку TiKV.
-	// Зависит от версии client-go.
-	return false
+	return errors.Is(err, tikverr.ErrNotExist)
 }
 
 // https://chatgpt.com/c/6ad49f93-8a34-83ed-a6f3-8d8586331610?src=history_search <------- важно чтобы понять как реалзовать tikv state

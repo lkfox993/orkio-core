@@ -74,7 +74,7 @@ func (s *Service) Create(ctx context.Context, input CreateDeploymentInput) (*mod
 				return err
 			}
 
-			version := &models.WorkflowVersion{
+			version := &models.WorkflowVersionModel{
 				ID:           uuid.New(),
 				DeploymentID: deployment.ID,
 				TenantID:     tenantID,

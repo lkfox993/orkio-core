@@ -2,7 +2,6 @@ package processes
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/lkfox993/orkio-core/internal/app"
 	"github.com/lkfox993/orkio-core/internal/coordinator"
@@ -28,7 +27,7 @@ func (s *Service) GetAll(ctx context.Context) ([]models.ProcessModel, error) {
 	return s.repository.GetAll(ctx)
 }
 
-func (s *Service) Create(ctx context.Context, input coordinator.CreateProcessInput) (*models.ProcessModel, error) {
+func (s *Service) Create(ctx context.Context, input coordinator.CreateProcessInput) (*process.Process, error) {
 
 	coordinator, err := app.Resolve[*coordinator.Engine]("coordinator")
 
@@ -42,7 +41,5 @@ func (s *Service) Create(ctx context.Context, input coordinator.CreateProcessInp
 		return nil, err
 	}
 
-	fmt.Println(p)
-
-	return nil, nil
+	return p, nil
 }
